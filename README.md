@@ -1,5 +1,5 @@
 <div align="center" id="top"> 
-  <img src="./.github/cover.gif" alt="Weather Forecast" />
+  <img src="./cover.gif" alt="Weather Forecast" />
   &#xa0;
 </div>
 
