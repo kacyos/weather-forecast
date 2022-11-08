@@ -86,7 +86,7 @@ export const Home = () => {
 
       setGeoLocation(location);
     } catch (error) {
-      console.error("Deu ruim!");
+      console.error(error);
     }
   };
 
@@ -100,9 +100,10 @@ export const Home = () => {
           lang: "pt_br",
         },
       });
-      console.log(response);
       setWeatherData(response);
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const convertDate = (UTCdate = 0): string | undefined => {
@@ -128,8 +129,8 @@ export const Home = () => {
           label={"Tema"}
           control={
             <Switch
-              icon={<BsMoonStarsFill color="#1020c7" size={20} />}
-              checkedIcon={<BsFillSunFill color="#fbff03" size={20} />}
+              icon={<BsFillSunFill color="#fbff03" size={20} />}
+              checkedIcon={<BsMoonStarsFill color="#1020c7" size={20} />}
               onChange={() => handleTheme()}
               sx={{ m: 1 }}
               defaultChecked={theme.name == "dark"}
