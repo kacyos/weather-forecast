@@ -1,9 +1,4 @@
-import {
-  ListItem,
-  ListItemIcon,
-  PaperProps,
-  ListItemIconProps,
-} from "@mui/material";
+import { ListItemIcon, ListItemIconProps } from "@mui/material";
 import styled from "styled-components";
 
 /* ListItemIcon */

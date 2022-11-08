@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { api } from "../services";
-import { MdArrowDownward, MdArrowUpward } from "react-icons/md";
+import { MdArrowUpward } from "react-icons/md";
 import { ImMeter } from "react-icons/im";
 import { GiWinterHat } from "react-icons/gi";
 import { FaRegEye } from "react-icons/fa";
@@ -10,33 +10,34 @@ import {
   BsThermometerSun,
   BsThermometerSnow,
   BsThermometerHalf,
+  BsMoonStarsFill,
+  BsFillSunFill,
 } from "react-icons/bs";
 
 import {
   Box,
   Button,
-  Container,
+  FormControlLabel,
   Grid,
-  Icon,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
   Paper,
+  Switch,
   TextField,
-  ThemeProvider,
   Typography,
 } from "@mui/material";
-import Grid2 from "@mui/material/Unstable_Grid2";
-import Logo from "../assets/logo.svg";
-import { light } from "../css/theme";
+import logo_light from "../assets/logo_light.svg";
+import logo_dark from "../assets/logo_dark.svg";
 import { StyledListItemIcon } from "../css/styles";
+import { ThemeContextApp } from "../context/themeContextApp";
 
 type GeoLocation = {
   country: string;
   lat: number;
   lon: number;
-  name: { pt: string };
+  name: string;
+  local_names: { pt: string; en: string };
   state: string;
 };
 
@@ -66,10 +67,12 @@ type WeatherData = {
   name: string;
 };
 
-const Home = () => {
+export const Home = () => {
   const [city, setCity] = useState("");
   const [geoLocation, setGeoLocation] = useState<GeoLocation>();
   const [weatherData, setWeatherData] = useState<WeatherData>();
+
+  const { handleTheme, theme } = useContext(ThemeContextApp);
 
   const getGeoLocalization = async () => {
     try {
@@ -102,9 +105,10 @@ const Home = () => {
     } catch (error) {}
   };
 
-  const convertDate = (date = 0): string | undefined => {
-    const dateInMilliseconds = date * 1000;
+  const convertDate = (UTCdate = 0): string | undefined => {
+    const dateInMilliseconds = UTCdate * 1000;
     const convertedDate = new Date(dateInMilliseconds).toLocaleString("pt-BR");
+
     return convertedDate;
   };
 
@@ -117,38 +121,42 @@ const Home = () => {
     geoLocation ? getWeatherData() : null;
   }, [geoLocation]);
 
-  /*
-  
-  image: http://openweathermap.org/img/w/{icon}.png 
-  wind-icon: import AirIcon from '@mui/icons-material/Air';
-  pressure: import CompressIcon from '@mui/icons-material/Compress'; - pressão at
-  temp_max: import ThermostatIcon from '@mui/icons-material/Thermostat';
-  temp_min: import AcUnitIcon from '@mui/icons-material/AcUnit';
-  import { width } from '@mui/system';
-
-  
-  
-  */
-
-  /* useEffect(() => {
-    getWeatherData();
-  }, [value]);*/
-  // sx={{ background: "#8eb4c5" }}
   return (
-    <Grid
-      container
-      justifyContent="center"
-      alignItems="center"
-      gap={4}
-      bgcolor={light.palette.background.default}
-    >
+    <Grid container justifyContent="center" alignItems="center" gap={4}>
+      <Grid sm={12} pl={4}>
+        <FormControlLabel
+          label={"Tema"}
+          control={
+            <Switch
+              icon={<BsMoonStarsFill color="#1020c7" size={20} />}
+              checkedIcon={<BsFillSunFill color="#fbff03" size={20} />}
+              onChange={() => handleTheme()}
+              sx={{ m: 1 }}
+              defaultChecked={theme.name == "dark"}
+            />
+          }
+        />
+      </Grid>
+
       <Grid item sm={6}>
         <Box width="100%">
-          <Box component="img" p={2} src={Logo} maxWidth="100%" />
+          <Box
+            component="img"
+            p={2}
+            src={`${theme.name == "dark" ? logo_dark : logo_light}`}
+            maxWidth="100%"
+          />
         </Box>
       </Grid>
 
-      <Grid item sm={6} display="flex" justifyContent="center" columnGap={2}>
+      <Grid
+        item
+        sm={6}
+        display="flex"
+        justifyContent="center"
+        columnGap={2}
+        mx={2}
+      >
         <TextField
           label="Cidade"
           variant="outlined"
@@ -161,140 +169,131 @@ const Home = () => {
           Pesquisar
         </Button>
       </Grid>
-
-      <Grid item sm={6} m={2}>
-        <Paper elevation={24}>
-          <Grid
-            container
-            justifyContent="center"
-            alignItems="center"
-            p={2}
-            rowGap={2}
-          >
-            <Grid item>
-              <Box
-                display="flex"
-                justifyContent="center"
-                flexWrap="wrap"
-                gap={2}
-              >
-                <Typography variant="body1" component="span">
-                  {geoLocation?.state}/{geoLocation?.country}
-                </Typography>
-                <Typography variant="body1" component="span">
-                  {convertDate(weatherData?.dt)}
-                </Typography>
-              </Box>
-            </Grid>
-
-            <Grid item sm={12} alignItems="center">
-              <Box display="flex" justifyContent="center" alignItems="center">
+      {weatherData && (
+        <Grid item sm={6} mt={2} mb={8} mx={2}>
+          <Paper elevation={24}>
+            <Grid
+              container
+              justifyContent="center"
+              alignItems="center"
+              p={2}
+              rowGap={2}
+            >
+              <Grid item>
                 <Box
-                  component="img"
-                  p={2}
-                  src={`http://openweathermap.org/img/w/${weatherData?.weather[0].icon}.png`}
-                />
-                <Typography variant="h5">
-                  {weatherData?.weather[0].description}
-                </Typography>
-              </Box>
+                  display="flex"
+                  justifyContent="center"
+                  flexWrap="wrap"
+                  gap={2}
+                >
+                  <Typography variant="body1" component="span">
+                    {geoLocation?.local_names.pt || geoLocation?.local_names.en}
+                    /{geoLocation?.country}
+                  </Typography>
+                  <Typography variant="body1" component="span">
+                    {convertDate(weatherData?.dt)}
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item sm={12} alignItems="center">
+                <Box display="flex" justifyContent="center" alignItems="center">
+                  <Box
+                    component="img"
+                    p={2}
+                    src={`http://openweathermap.org/img/w/${weatherData?.weather[0].icon}.png`}
+                  />
+                  <Typography variant="h5">
+                    {weatherData?.weather[0].description}
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item md={6} sm={12}>
+                <List>
+                  <ListItem>
+                    <StyledListItemIcon>
+                      <BsThermometerHalf color="#212121" size={20} />
+                    </StyledListItemIcon>
+                    <ListItemText
+                      primary={`Temperatura: ${weatherData?.main.temp}ºC`}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <StyledListItemIcon>
+                      <BsThermometerSnow color="#01579b" size={20} />
+                    </StyledListItemIcon>
+                    <ListItemText
+                      primary={`Temperatura mínima: ${weatherData?.main.temp_min}ºC`}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <StyledListItemIcon>
+                      <BsThermometerSun color="#f44336" size={20} />
+                    </StyledListItemIcon>
+                    <ListItemText
+                      primary={`Temperatura máxima: ${weatherData?.main.temp_max}ºC`}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <StyledListItemIcon>
+                      <GiWinterHat color="#01579b" size={20} />
+                    </StyledListItemIcon>
+                    <ListItemText
+                      primary={`Sensação térmica: ${weatherData?.main.feels_like}ºC`}
+                    />
+                  </ListItem>
+                </List>
+              </Grid>
+
+              <Grid item md={6} sm={12}>
+                <List>
+                  <ListItem>
+                    <StyledListItemIcon>
+                      <BsDropletHalf color="#01579b" size={20} />
+                    </StyledListItemIcon>
+                    <ListItemText
+                      primary={`Umidade: ${weatherData?.main.humidity}%`}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <StyledListItemIcon>
+                      <ImMeter color="#212121" size="20" />
+                    </StyledListItemIcon>
+                    <ListItemText
+                      primary={`Pressão Atmosférica: ${weatherData?.main.pressure}hPa`}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <StyledListItemIcon>
+                      <FaRegEye size={20} color="#212121" />
+                    </StyledListItemIcon>
+                    <ListItemText
+                      primary={`Visibilidade: ${convertMeterToKilometer(
+                        weatherData?.visibility
+                      )} Km`}
+                    />
+                  </ListItem>
+
+                  <ListItem>
+                    <StyledListItemIcon>
+                      <BsWind color="#01579b" size={20} />
+                    </StyledListItemIcon>
+
+                    <ListItemText sx={{ flex: "0 0 auto" }}>
+                      {`Vento: ${weatherData?.wind.speed}m/s`}{" "}
+                    </ListItemText>
+
+                    <StyledListItemIcon rotate={weatherData?.wind.deg}>
+                      <MdArrowUpward size={22} color="#212121" />
+                    </StyledListItemIcon>
+                  </ListItem>
+                </List>
+              </Grid>
             </Grid>
-
-            <Grid item md={6} sm={12}>
-              <List>
-                <ListItem>
-                  <StyledListItemIcon>
-                    <BsThermometerHalf color="#212121" size={20} />
-                  </StyledListItemIcon>
-                  <ListItemText
-                    primary={`Temperatura: ${weatherData?.main.temp}ºC`}
-                  />
-                </ListItem>
-                <ListItem>
-                  <StyledListItemIcon>
-                    <BsThermometerSnow color="#01579b" size={20} />
-                  </StyledListItemIcon>
-                  <ListItemText
-                    primary={`Temperatura mínima: ${weatherData?.main.temp_min}ºC`}
-                  />
-                </ListItem>
-                <ListItem>
-                  <StyledListItemIcon>
-                    <BsThermometerSun color="#f44336" size={20} />
-                  </StyledListItemIcon>
-                  <ListItemText
-                    primary={`Temperatura máxima: ${weatherData?.main.temp_max}ºC`}
-                  />
-                </ListItem>
-                <ListItem>
-                  <StyledListItemIcon>
-                    <GiWinterHat color="#01579b" size={20} />
-                  </StyledListItemIcon>
-                  <ListItemText
-                    primary={`Sensação térmica: ${weatherData?.main.feels_like}ºC`}
-                  />
-                </ListItem>
-              </List>
-            </Grid>
-
-            <Grid item md={6} sm={12}>
-              <List>
-                <ListItem>
-                  <StyledListItemIcon>
-                    <BsDropletHalf color="#01579b" size={20} />
-                  </StyledListItemIcon>
-                  <ListItemText
-                    primary={`Umidade: ${weatherData?.main.humidity}%`}
-                  />
-                </ListItem>
-                <ListItem>
-                  <StyledListItemIcon>
-                    <ImMeter color="#212121" size="20" />
-                  </StyledListItemIcon>
-                  <ListItemText
-                    primary={`Pressão Atmosférica: ${weatherData?.main.pressure}hPa`}
-                  />
-                </ListItem>
-                <ListItem>
-                  <StyledListItemIcon>
-                    <FaRegEye size={20} color="#212121" />
-                  </StyledListItemIcon>
-                  <ListItemText
-                    primary={`Visibilidade: ${convertMeterToKilometer(
-                      weatherData?.visibility
-                    )} Km`}
-                  />
-                </ListItem>
-
-                <ListItem>
-                  <StyledListItemIcon>
-                    <BsWind color="#01579b" size={20} />
-                  </StyledListItemIcon>
-
-                  <ListItemText sx={{ flex: "0 0 auto" }}>
-                    {`Vento: ${weatherData?.wind.speed}m/s`}{" "}
-                  </ListItemText>
-
-                  <StyledListItemIcon rotate={weatherData?.wind.deg}>
-                    <MdArrowUpward size={22} color="#212121" />
-                  </StyledListItemIcon>
-                </ListItem>
-              </List>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Grid>
+          </Paper>
+        </Grid>
+      )}
     </Grid>
   );
 };
-
-export { Home };
-/*
-
-<InputAutoComplete
-        onInputChange={getGeoLocalization}
-        onChange={setValue}
-        optionsArray={geoLocations}
-        getDataWhenChangeInput={getGeoLocalization}
-      />
-*/
